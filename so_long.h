@@ -6,7 +6,7 @@
 /*   By: evscheid <evscheid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/01 09:05:44 by evscheid          #+#    #+#             */
-/*   Updated: 2023/02/02 02:19:11 by evscheid         ###   ########.fr       */
+/*   Updated: 2023/02/17 18:28:51 by evscheid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,29 @@
 # include <sys/uio.h>
 # include <fcntl.h>
 
+
+# ifndef LONGUEUR
+#  define LONGUEUR 57
+#endif
+
+# ifndef HAUTEUR
+#  define HAUTEUR 82
+#endif 
+
 typedef struct s_img{
 	void	*floor;
 	void	*top_wall;
 	void	*bottom_wall;
+	void	*left_wall;
+	void	*right_wall;
 	void	*space_background;
+	void	*corner_gh;
+	void	*corner_gb;
+	void	*corner_dh;
+	void	*corner_db;
+	void	*obstacle;
+	void	*dead_body;
+	void	*vent;
 }					t_img;
 
 typedef struct s_player{
@@ -35,6 +53,12 @@ typedef struct s_player{
 typedef struct s_game {
 	void	*mlx_ptr;
 	void	*win_ptr;
+	int		player_x;
+	int		player_y;
+	int		str_x;
+	int		str_y;
+	int		height;
+	int		width;
 	int		blabla;
 	int		bloblo;
 	int		frame;
@@ -47,6 +71,7 @@ typedef struct s_game {
 	int		input_d;
 	int		screen_X;
 	int		screen_Y;
+	int		count;
 	char	**map;
 	t_img	img;
 	t_player	player;

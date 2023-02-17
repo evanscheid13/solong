@@ -6,14 +6,11 @@
 /*   By: evscheid <evscheid@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/01 09:48:36 by evscheid          #+#    #+#             */
-/*   Updated: 2023/02/02 02:45:34 by evscheid         ###   ########.fr       */
+/*   Updated: 2023/02/17 18:36:13 by evscheid         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "so_long.h"
-
-int screen_Y = 1080;
-int screen_X = 1920;
 
 void	init(t_game *game)
 {
@@ -23,109 +20,312 @@ void	init(t_game *game)
 	game->input_s = 1;
 	game->player.skin = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/perso_base.xpm", &game->blabla, &game->bloblo);
 	game->img.floor = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/floorAS.xpm", &game->blabla, &game->bloblo);
-	game->img.top_wall = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/top_wall.xpm", &game->blabla, &game->bloblo);
-	game->img.bottom_wall = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/bottom_wall.xpm", &game->blabla, &game->bloblo);
+	game->img.top_wall = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/bottom_big_wall.xpm", &game->blabla, &game->bloblo);
+	game->img.bottom_wall = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/top_big_wall.xpm", &game->blabla, &game->bloblo);
+	game->img.left_wall = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/right_big_wall.xpm", &game->blabla, &game->bloblo);
+	game->img.right_wall = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/left_big_wall.xpm", &game->blabla, &game->bloblo);
+	game->img.corner_gh = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/corner_gh.xpm", &game->blabla, &game->bloblo);
+	game->img.corner_gb = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/corner_gb.xpm", &game->blabla, &game->bloblo);
+	game->img.corner_dh = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/corner_dh.xpm", &game->blabla, &game->bloblo);
+	game->img.corner_db = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/corner_db.xpm", &game->blabla, &game->bloblo);
+	game->img.obstacle = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/obstacle.xpm", &game->blabla, &game->bloblo);
+	game->img.dead_body = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/dead_body.xpm", &game->blabla, &game->bloblo);
+	game->img.vent = mlx_xpm_file_to_image(game->mlx_ptr, "./xpm/vent.xpm", &game->blabla, &game->bloblo);
 }
 
-int	background(t_game *game)
+
+int	parse_hauteur(t_game *game)
 {
-	int i;
-	int j;
-	int a;
-	int b;
-	
-	i = 0;
-	j = 0;
-	a = 0;
-	b = 0;
+	int	i;
 
-	while (j < screen_Y)
+	i = 0;	
+	while (game->map[i])
 	{
-		while (i < screen_X)
-		{
-			mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.floor, i, j);
-			i += 57;
-		}
-		j += 82;
-		i = 0;
- 	}
-	while (a < screen_X)
-	{
-		mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.top_wall, a, b);
-		a += 227;
+		i++;
 	}
-	a = 0;
-	b = screen_Y - 82;
-	while (a < screen_X)
-	{
-		mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.bottom_wall, a, b);
-		a += 227;
-	}
-	return (0);
+	return (i);
 }
 
-void	render_map(t_game *game)
+
+void 	print_image(t_game *game, void *image, int x, int y)
+{
+	mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, image, x +32, y);
+}
+
+void	set_exit(t_game *game)
 {
 	int	i;
 	int j;
-	int x;
-	int y;
+	
+	i = 1;
+	while (game->map[i + 1])
+	{
+		j = 1;
+		while (game->map[i + 1][j + 1])
+		{
+			if (game->map[i][j] == 'E')
+			{
+				print_image(game, game->img.vent, j * LONGUEUR, i * HAUTEUR);
+			}
+			j ++;
+			
+		}
+		i++;
+	}
+}
 
-	x =0;
-	y =0;
+void	set_obstacle(t_game *game)
+{
+	int	i;
+	int j;
+	
+	i = 1;
+	while (game->map[i + 1])
+	{
+		j = 1;
+		while (game->map[i + 1][j + 1])
+		{
+			if (game->map[i][j] == '1')
+				print_image(game, game->img.obstacle, j * LONGUEUR, i * HAUTEUR);
+			j ++;
+			
+		}
+		i++;
+	}
+}
+
+void	set_collecible(t_game *game)
+{
+	int	i;
+	int j;
+	int c;
+	
+	c = 0;
+	i = 1;
+	while (game->map[i + 1])
+	{
+		j = 1;
+		while (game->map[i + 1][j + 1])
+		{
+			if (game->map[i][j] == 'C')
+			{
+				print_image(game, game->img.dead_body, j * LONGUEUR, i * HAUTEUR);
+				c++;
+				printf("count = %d\n", game->count);
+			}
+			j ++;
+		}
+		i++;
+	}
+	game->count = c;
+}
+
+int	parse_longueur(t_game *game)
+{
+	int i;
+	
+	i = ft_strlen(game->map[0]);
+	return (i);
+}
+
+void 	print_left_wall(t_game *game)
+{
+	int i;
+	int j;
+
+	i = 0;
+	j = 0;
+	while (game->map[i])
+	{
+		print_image(game, game->img.left_wall, -32, j);
+		j += 454;
+		i++;
+	}
+}
+
+void 	print_right_wall(t_game *game)
+{
+	int i;
+	int j;
+
+	i = 0;
+	j = 0;
+	while (game->map[i])
+	{
+		print_image(game, game->img.right_wall, game->width - LONGUEUR, j);
+		j += 454;
+		i++;
+	}
+}
+
+void	print_bottom_wall(t_game *game)
+{
+	int i;
+	int j;
+	
+	i = game->height;
+	printf("%d\n", LONGUEUR);
+	j = 0;
+	printf("%d\n", i);
+	while (j < game->width)
+	{
+		print_image(game, game->img.bottom_wall, j - 32, i - HAUTEUR);
+		j += 454;	
+ 	}
+}
+void	print_top_wall(t_game *game)
+{
+	int	j;
+
+	j = 0;
+	while (j < game->width)
+	{
+		print_image(game, game->img.top_wall, j - 32, 0);
+		j += 454;
+ 	}
+}
+
+void	print_floor(t_game *game)
+{
+	int i;
+	int j;
+	
+		i = 1;
+		while (game->map[i + 1])
+		{
+			j = 1;
+			while (game->map[i + 1][j + 1])
+			{
+				print_image(game, game->img.floor, j * LONGUEUR, i * HAUTEUR);
+				j ++;
+				
+			}
+			i++;
+		}
+}
+
+void	player_setup(t_game *game)
+{
+	int i;
+	int j;
+
+	i = 1;
+	j = 1;
 	while (game->map[j])
 	{
 		while (game->map[j][i])
 		{
-			printf("[%c]x=%d y=%d", game->map[j][i], x, y);
-			if (game->map[j][i] == '1' && j == 0)
-				mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.top_wall, x, y);
-			else if (game->map[j][i] == '1' && j != 0)
-				mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.bottom_wall, x, y);
-			else if (game->map[j][i] == '0')
-				mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.floor, x, y);
-			else if (game->map[j][i] == 'P')
+			if (game->map[j][i] == 'P')
 			{
-				mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.floor, x, y);
-				mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->player.skin, x, y);
+				print_image(game, game->player.skin, j * LONGUEUR, i * HAUTEUR);
+				game->player_x = j * LONGUEUR;
+				game->player_y = i * HAUTEUR;
+				game->str_x = j;
+				game->str_y = i; 
 			}
 			i++;
-			x += 227;
 		}
-		printf("\n\n");
-		y += 82;
-		x = 0;
-		i = 0;
 		j++;
-	}	
+	}
 }
+
+int	background(t_game *game)
+{
+	print_floor(game);
+	print_bottom_wall(game);
+	print_top_wall(game);
+	print_right_wall(game);
+	print_left_wall(game);
+	print_image(game, game->img.corner_gh, -32, 0);
+	print_image(game, game->img.corner_gb, -32, game->height - HAUTEUR);
+	print_image(game, game->img.corner_dh, game->width - LONGUEUR, 0);
+	print_image(game, game->img.corner_db, game->width - LONGUEUR, game->height - HAUTEUR);
+	set_obstacle(game);
+	set_collecible(game);
+	player_setup(game);
+	set_exit(game);
+	return (0);
+}
+
 
 static void	player_moove(int whopress, t_game *game)
 {
-	static int i;
-	static int j;
-
-	mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->img.floor, i, j);
+	static int x;
+	static int y;
+	
+	x = game->str_x;
+	y = game->str_y;
+	printf("VALEUR DE X :%d\nVALEUR DE Y : %d\n", game->player_x, game->player_y);
+	print_image(game, game->img.floor, game->player_x, game->player_y);
+	
 	if (whopress == 13)
 	{
-		j -= 82;
-		mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->player.skin, i, j);
+		if (game->map[y - 1][x] == '0' || game->map[y - 1][x] == 'P' || game->map[y - 1][x] == 'C' || game->map[y - 1][x] == 'E')
+		{
+			if (game->map[y - 1][x] == 'E')
+			{
+				mlx_clear_window(game->mlx_ptr, game->win_ptr);
+				mlx_destroy_image(game->mlx_ptr, game->win_ptr);
+			}
+			game->player_y -= 82;
+			game->str_y--;
+			print_image(game, game->player.skin, game->player_x, game->player_y);
+		}
+		else
+			print_image(game, game->player.skin, game->player_x, game->player_y);		
 	}
 	else if (whopress == 0)
 	{
-		i -= 57;
-		mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->player.skin, i, j);
+		if (game->map[y][x - 1] == '0' || game->map[y][x - 1] == 'P' || game->map[y][x - 1] == 'C' || game->map[y][x - 1] == 'E')
+		{
+			if (game->map[y][x - 1] == 'E')
+			{
+				mlx_clear_window(game->mlx_ptr, game->win_ptr);
+				mlx_destroy_image(game->mlx_ptr, game->win_ptr);
+			}
+			game->player_x -= 57;
+			game->str_x--;
+			print_image(game, game->player.skin, game->player_x, game->player_y);
+		}
+		else
+			print_image(game, game->player.skin, game->player_x, game->player_y);	
 	}
 	else if (whopress == 2)
 	{
-		i += 57;
-		mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->player.skin, i, j);
+		if (game->map[y][x + 1] == '0' || game->map[y][x + 1] == 'P' || game->map[y][x + 1] == 'C' || game->map[y][x + 1] == 'E')
+		{
+			if (game->map[y][x + 1] == 'E')
+			{
+				mlx_clear_window(game->mlx_ptr, game->win_ptr);
+				mlx_destroy_image(game->mlx_ptr, game->win_ptr);
+			}
+			game->player_x += 57;
+			game->str_x++;
+			print_image(game, game->player.skin, game->player_x, game->player_y);
+		}
+		else
+			print_image(game, game->player.skin, game->player_x, game->player_y);	
+
+			
 	}
 	else if (whopress == 1)
 	{
-		j += 82;
-		mlx_put_image_to_window(game->mlx_ptr, game->win_ptr, game->player.skin, i, j);
+		if (game->map[y + 1][x] == '0' || game->map[y + 1][x] == 'C' || game->map[y + 1][x] == 'P' || game->map[y + 1][x] == 'E')
+		{
+			if (game->map[y + 1][x] == 'E')
+			{
+				mlx_clear_window(game->mlx_ptr, game->win_ptr);
+				mlx_destroy_image(game->mlx_ptr, game->win_ptr);
+			}
+			game->player_y += 82;
+			game->str_y++;
+			print_image(game, game->player.skin, game->player_x, game->player_y);
+		}
+		else
+			print_image(game, game->player.skin, game->player_x, game->player_y);
 	}
+	// printf("VALEUR DE Y : %c\n", game->map[game->str_x][game->str_y]);
+
 }
 
 int		key_press(int keysim, t_game *game)
@@ -146,10 +346,12 @@ int		key_press(int keysim, t_game *game)
 
 void	mlx_setup(t_game *game)
 {
+	game->width = parse_longueur(game) * LONGUEUR;
+	game->height =  parse_hauteur(game) * HAUTEUR;
 	game->mlx_ptr = mlx_init();
-	game->win_ptr = mlx_new_window(game->mlx_ptr, 1920, 1080, "so_long_Amoung_Us.");
+	game->win_ptr = mlx_new_window(game->mlx_ptr, game->width +63, game->height, "so_long_Amoung_Us.");
 	init(game);
-	render_map(game);
+	background(game);
 	mlx_hook(game->win_ptr, 2, 0, &key_press, game);
 	mlx_loop(game->mlx_ptr);
 }
@@ -169,7 +371,7 @@ int main(void)
 	stock = NULL;
 	line = NULL;
 	tmp = NULL;
-	fd = open("map/map_test.ber", O_RDONLY);
+	fd = open("map/map_test_sec.ber", O_RDONLY);
 	while (1)
 	{
 		line = get_next_line(fd);
